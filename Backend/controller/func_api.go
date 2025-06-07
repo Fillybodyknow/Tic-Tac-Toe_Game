@@ -39,7 +39,7 @@ func Start_game(c *gin.Context) {
 	human_player = startGame.Player
 	is_started = true
 
-	c.JSON(http.StatusOK, gin.H{"board": board, "currentPlayer": currentPlayer})
+	c.JSON(http.StatusOK, gin.H{"board": board, "available_moves": getAvailableMoves(), "currentPlayer": currentPlayer, "winner": winner, "draw": draw})
 }
 
 func Get_board(c *gin.Context) {
@@ -47,10 +47,7 @@ func Get_board(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Game is not started"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"board":         board,
-		"currentPlayer": currentPlayer,
-	})
+	c.JSON(http.StatusOK, gin.H{"board": board, "available_moves": getAvailableMoves(), "currentPlayer": currentPlayer, "winner": winner, "draw": draw})
 }
 
 func Apply_move(c *gin.Context) {
@@ -72,32 +69,39 @@ func Apply_move(c *gin.Context) {
 		return
 	}
 	board[move.Position] = human_player
-	currentPlayer = human_player
+	if human_player == "X" {
+		currentPlayer = "O"
+	} else {
+		currentPlayer = "X"
+	}
 	if checkWin() {
-		c.JSON(http.StatusOK, gin.H{"board": board, "winner": currentPlayer})
-		return
-	} else if is_draw() {
-		c.JSON(http.StatusOK, gin.H{"board": board, "draw": true})
+		currentPlayer, winner = human_player, human_player
+		c.JSON(http.StatusOK, gin.H{"board": board, "available_moves": getAvailableMoves(), "currentPlayer": currentPlayer, "winner": winner, "draw": draw})
 		return
 	}
 	ai_move(ai_player)
+	if ai_player == "X" {
+		currentPlayer = "O"
+	} else {
+		currentPlayer = "X"
+	}
 	if checkWin() {
-		c.JSON(http.StatusOK, gin.H{"board": board, "winner": currentPlayer})
-		return
-	} else if is_draw() {
-		c.JSON(http.StatusOK, gin.H{"board": board, "draw": true})
+		currentPlayer, winner = ai_player, ai_player
+		c.JSON(http.StatusOK, gin.H{"board": board, "available_moves": getAvailableMoves(), "currentPlayer": currentPlayer, "winner": winner, "draw": draw})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"board": board})
+	is_draw()
+	c.JSON(http.StatusOK, gin.H{"board": board, "available_moves": getAvailableMoves(), "currentPlayer": currentPlayer, "winner": winner, "draw": false})
 }
 
 func Reset_game(c *gin.Context) {
-	is_started = false
+	winner = ""
+	draw = false
 	board = [9]string{
 		" ", " ", " ",
 		" ", " ", " ",
 		" ", " ", " ",
 	}
 	currentPlayer = "X"
-	c.JSON(http.StatusOK, gin.H{"board": board, "currentPlayer": currentPlayer})
+	c.JSON(http.StatusOK, gin.H{"board": board, "available_moves": getAvailableMoves(), "currentPlayer": currentPlayer, "winner": winner, "draw": false})
 }

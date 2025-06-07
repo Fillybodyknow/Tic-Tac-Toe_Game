@@ -30,13 +30,14 @@ func checkWin() bool {
 	return false
 }
 
-func is_draw() bool {
+func is_draw() {
 	for _, cell := range board {
 		if cell == " " {
-			return false
+			draw = false
+			return
 		}
 	}
-	return true
+	draw = true
 }
 
 func getAvailableMoves() []int {
@@ -53,6 +54,12 @@ func ai_move(aiPlayer string) {
 	availableMoves := getAvailableMoves()
 	state := getState()
 	key := fmt.Sprintf("('%s', '%s')", state, aiPlayer)
+
+	if len(availableMoves) == 0 {
+		// ไม่ควรเกิดขึ้น แต่กันไว้ก่อน
+		fmt.Println("No available moves for AI")
+		return
+	}
 
 	qValues, found := qTable[key]
 	if !found {
